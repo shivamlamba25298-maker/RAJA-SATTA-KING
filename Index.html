@@ -1,0 +1,230 @@
+<!doctype html>
+<html lang="hi">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Result Demo - (Fictional)</title>
+  <style>
+    body{font-family:Arial,Helvetica,sans-serif;background:#f4f6f8;color:#111;margin:0;padding:20px}
+    header{max-width:900px;margin:0 auto 20px}
+    .card{background:#fff;padding:16px;border-radius:8px;box-shadow:0 2px 6px rgba(0,0,0,0.08);margin-bottom:16px}
+    h1{margin:0 0 8px;font-size:24px}
+    .controls{display:flex;gap:8px;flex-wrap:wrap}
+    button{padding:8px 12px;border:0;border-radius:6px;background:#0b74de;color:#fff;cursor:pointer}
+    button.secondary{background:#6b7280}
+    .result-big{font-size:48px;font-weight:700;letter-spacing:4px;margin:12px 0}
+    table{width:100%;border-collapse:collapse}
+    th,td{padding:8px;border-bottom:1px solid #eee;text-align:center}
+    .note{font-size:13px;color:#7a7a7a}
+    .ai-output{white-space:pre-wrap;background:#f8fafc;padding:12px;border-radius:6px;margin-top:12px;border:1px dashed #dCE7F8}
+    .warning{background:#fff4f4;color:#8b0000;padding:10px;border-radius:6px;margin-bottom:12px}
+  </style>
+</head>
+<body>
+  <div style="max-width:900px;margin:0 auto">
+    <header>
+      <div class="warning">
+        <strong>Legal Notice:</strong> यह एक <em>fictional / demo</em> site है — वास्तविक सट्टा/जुआ के लिए उपयोग न करें।
+      </div>
+
+      <div class="card">
+        <h1>Result Demo Site (Fictional)</h1>
+        <div class="note">यहाँ दिख रहे सभी नतीजे randomly generate होते हैं — केवल सीखने/डेमो के लिए।</div>
+      </div>
+
+      <div class="card">
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap">
+          <div>
+            <div style="font-size:14px;color:#555">आज का नतीजा</div>
+            <div id="todayBox" class="result-big">—</div>
+            <div class="note" id="timeStamp"></div>
+          </div>
+
+          <div style="min-width:220px">
+            <div class="controls">
+              <button id="genBtn">Generate Fictional Result</button>
+              <button id="saveBtn" class="secondary">Save to History</button>
+              <button id="clearBtn" class="secondary">Clear History</button>
+            </div>
+
+            <div style="margin-top:8px">
+              <label class="note">Result Type:</label>
+              <select id="typeSelect">
+                <option value="3">3-digit</option>
+                <option value="2">2-digit</option>
+                <option value="1">1-digit</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <div style="margin-top:12px">
+          <button id="aiBtn">AI Insight (Demo)</button>
+          <span class="note"> — AI सिर्फ़ डेमो summary देगा (fictional)।</span>
+
+          <div id="aiOutput" class="ai-output" style="display:none"></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>History</h3>
+        <table id="historyTable">
+          <thead><tr><th>Date</th><th>Type</th><th>Result</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+
+      <div class="card">
+        <h3>How to Host Free (Quick)</h3>
+        <ol>
+          <li>GitHub पर एक नया public repo बनाएं (e.g., <code>result-demo</code>).</li>
+          <li>इस <code>index.html</code> फ़ाइल को repo में push करें।</li>
+          <li>Settings → Pages → Branch: <code>main</code> → Folder: <code>/ (root)</code> → Save।</li>
+          <li>कुछ ही मिनट में: <code>https://yourusername.github.io/result-demo</code> पर site लाइव।</li>
+        </ol>
+        <div class="note">GitHub Pages पूरी तरह free है और static HTML के लिए आदर्श है।</div>
+      </div>
+    </header>
+  </div>
+
+<script>
+/*
+  DISCLAIMER: Do NOT use this for real gambling or money-related activity.
+  This is purely a demo generating fictional/random numbers and (optionally)
+  calling an AI API to produce non-actionable summaries.
+*/
+
+const todayBox = document.getElementById('todayBox');
+const genBtn = document.getElementById('genBtn');
+const saveBtn = document.getElementById('saveBtn');
+const clearBtn = document.getElementById('clearBtn');
+const historyTbody = document.querySelector('#historyTable tbody');
+const typeSelect = document.getElementById('typeSelect');
+const timeStamp = document.getElementById('timeStamp');
+const aiBtn = document.getElementById('aiBtn');
+const aiOutput = document.getElementById('aiOutput');
+
+function formatDate(d){
+  return d.toLocaleString();
+}
+
+function genRandomDigits(n){
+  if(n===1) return String(Math.floor(Math.random()*10));
+  const min = Math.pow(10, n-1);
+  const max = Math.pow(10, n)-1;
+  return String(Math.floor(Math.random()*(max-min+1))+min);
+}
+
+function showToday(result){
+  todayBox.textContent = result;
+  timeStamp.textContent = 'Generated at: ' + formatDate(new Date());
+}
+
+genBtn.addEventListener('click', ()=>{
+  const t = Number(typeSelect.value);
+  const r = genRandomDigits(t);
+  showToday(r);
+});
+
+function loadHistory(){
+  const raw = localStorage.getItem('demo_results_v1') || '[]';
+  try{
+    return JSON.parse(raw);
+  }catch(e){
+    return [];
+  }
+}
+
+function saveHistory(arr){
+  localStorage.setItem('demo_results_v1', JSON.stringify(arr));
+}
+
+function addToHistory(result, type){
+  const arr = loadHistory();
+  arr.unshift({ts: Date.now(), type, result});
+  if(arr.length>200) arr.length=200;
+  saveHistory(arr);
+  renderHistory();
+}
+
+function renderHistory(){
+  const arr = loadHistory();
+  historyTbody.innerHTML = '';
+  arr.forEach(item=>{
+    const tr = document.createElement('tr');
+    const d = new Date(item.ts);
+    tr.innerHTML = '<td>'+formatDate(d)+'</td><td>'+item.type+'-digit</td><td>'+item.result+'</td>';
+    historyTbody.appendChild(tr);
+  });
+}
+
+saveBtn.addEventListener('click', ()=>{
+  const cur = todayBox.textContent.trim();
+  if(!cur || cur==='—'){ alert('Pehle result generate karein.'); return; }
+  addToHistory(cur, Number(typeSelect.value));
+});
+
+clearBtn.addEventListener('click', ()=>{
+  if(confirm('History clear karna hai?')){ localStorage.removeItem('demo_results_v1'); renderHistory(); }
+});
+
+// On load
+renderHistory();
+
+// ---------------------
+// AI Insight (Demo)
+// ---------------------
+/*
+  IMPORTANT:
+  - This AI call is optional and for demo only.
+  - Replace "YOUR_OPENAI_API_KEY" with your key if you want to test.
+  - Do NOT use the AI to provide real gambling/predictive advice.
+*/
+aiBtn.addEventListener('click', async ()=>{
+  aiOutput.style.display = 'none';
+  aiOutput.textContent = 'Generating AI insight... (demo)';
+  aiOutput.style.display = 'block';
+
+  // Prepare a small dataset (fictional) from history
+  const arr = loadHistory().slice(0, 30); // last 30
+  const sample = arr.map(a => `${new Date(a.ts).toLocaleDateString()}: ${a.type}-digit -> ${a.result}`).join('\\n');
+
+  // Compose prompt for AI (non-actionable)
+  const prompt = `You are an assistant that summarizes fictional numeric result data for educational/demo purpose.
+Do NOT provide gambling advice or predictions. Only give a neutral summary of patterns (if any) and state it's fictional.
+Data (most recent first):
+${sample}
+
+Give a 3-4 line neutral summary and one short suggestion for improving this demo dataset (e.g., add timestamps, label sources).`;
+
+  try{
+    // NOTE: This example shows how you'd call OpenAI — to actually run this you must:
+    // 1) Replace the API key below.
+    // 2) Serve this page from a server (or use a proxy) because browsers block direct calls with secret keys.
+    // For demos, you can run a server-side proxy or test locally with a server.
+    const OPENAI_KEY = 'YOUR_OPENAI_API_KEY'; // <-- Replace or keep blank to skip
+    if(!OPENAI_KEY || OPENAI_KEY==='YOUR_OPENAI_API_KEY'){
+      // Fallback: local simple summary algorithm (no external API)
+      let summary = 'Demo summary (no API key provided). Recent results count: ' + arr.length + '.';
+      if(arr.length>0){
+        const counts = {};
+        arr.forEach(a=> counts[a.result] = (counts[a.result]||0)+1);
+        const top = Object.entries(counts).sort((a,b)=>b[1]-a[1])[0];
+        if(top) summary += ` Most frequent recent result: ${top[0]} (${top[1]} times).`;
+      }
+      summary += ' (This is a local, non-AI summary; replace API key to call a real AI service.)';
+      aiOutput.textContent = summary;
+      return;
+    }
+
+    const resp = await fetch('https://api.openai.com/v1/chat/completions', {
+      method:'POST',
+      headers:{
+        'Content-Type':'application/json',
+        'Authorization':'Bearer ' + OPENAI_KEY
+      },
+      body: JSON.stringify({
+        model: 'gpt-4o-mini', // example; change if needed
+        messages: [
+          {role:'system', content:'You are a helpful summarizer. Do not provide gambling advice.'},
+          {role:'user
